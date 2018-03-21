@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<title></title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
+<html>
+
+<head>
+    <title>SCU Bronco Editor</title>
+    <style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    body {
+         display: flex;
+        flex-direction: column;
+        background-color: black;
+    }
+
+    #editor {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        font-family: monospace;
+        font-size: 1.5rem;
+        background: aliceblue;
+    }
+
+    #editor-container {
+        position: relative;
+        width: 100%;
+        height: 90%;
+        flex: 1 1;
+        border : 1px solid lightgrey;
+    }
+    .chat-message-box{
+      height: calc(100% - 220px);
+    }
+    .chat-container{
+      border : 1px solid lightgrey;
+      height: 90%;
+      background: antiquewhite;
+    }
+    .editor-title{
+      margin : 20px 0px 20px -10px;
+      font-family: monospace;      
+      position: relative;
+    }
+    .chat-message-box{
+      padding-left: 20px;
+      padding-right: 20px;
+      overflow: auto;
+    }
+    .chat-input-box{
+      padding : 20px;
+      height: 220px;
+    }
+    .editor-title-text{
+      text-align: center;
+      color: aliceblue;
+    }
+    .icon{
+      width: 40px;
+      height: 40px;
+    }
+   
+    </style>
+</head>
+
+<body> 
+  <div class="container-fluid" style="height:100%">
+    <div class="row" style="height:100%">
+        <div class="col-sm-8">
+           <div class="row editor-title">
+              <div class="col-sm-12 ">
+                <h1 class ="editor-title-text"><span > <img class="icon" src="editor_icon.png"></img> </span>
+                  SCU BRONCO EDITOR !!!!
+                  </h1>
+              </div>
+            </div>
+            <div id="editor-container">
+                <div id="editor">                    
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="row editor-title ">
+              <div class="col-sm-12">
+                <h1 class="editor-title-text"><span > <img class="icon" src="chat_icon.png"></img> </span>CHAT
+                  </h1> 
+              </div>
+          </div>            
+            <div class="chat-container">               
+                <div class="chat-message-box" id="chat-message-box">
+                </div>
+                <div class="chat-input-box">
+                    <input id="txtName" class="form-control" placeholder="Chat Alias" type="text">
+                    <textarea id="txtMessage" class="form-control" placeholder="Message" style="margin-top : 20px"></textarea>
+                    <div style="margin-top : 20px"><button id="send" class="btn btn-success" style="width : 100%">Send</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/ace.js"></script>
+    <script src="/crdt.js"></script>
+    <script src="/editor.js"></script>
+    <script>
+    var defaultUserName = "anonymous";
+    var chatUserId = "";
+    var chatSocket = io()
+    chatSocket.on('init', ({ id, history }) => {
+      chatUserId = id;
+    });
+    chatSocket.on("chat", addChat)
+    $(() => {
+        //getChats()
+
+        $("#send").click(() => {
+          
+            var userName = $("#txtName").val();
+
+            if(userName == "" || userName == null){
+              userName = defaultUserName;
+            }
+            if(($("#txtMessage").val() != null) && ($("#txtMessage").val() != "") ){
+              $("#txtName").hide();
+            var chatMessage = {
+                userId : chatUserId,
+                name: userName,
+                chat: $("#txtMessage").val()
+            }
+            postChat(chatMessage)
+          }
+           ($("#txtMessage").val(""));
+        }) ;
+       
+    })
+
+    function postChat(chat) {
+        $.post("http://localhost:3020/chats", chat)
+    }
+
+    function getChats() {
+        $.get("/chats", (chats) => {
+            chats.forEach(addChat)
+        })
+    }
+
+    function addChat(chatObj) {
+        $("#chat-message-box").append(`<h5>${chatObj.name} </h5><p>${chatObj.chat}</p>`);
+    }
+    </script>
+</body>
+
+</html>
